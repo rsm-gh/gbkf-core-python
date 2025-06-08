@@ -21,9 +21,9 @@ import tempfile
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src"))
 
-from Core import Constants, Reader, Writer
+from GBKFCore import Constants, Reader, Writer
 
-class TestCore(unittest.TestCase):
+class TestGBKFCore(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
