@@ -1,2 +1,2 @@
 
-Python implementation of the [Generic Binary Keyed Format (*.gbkf)](https://rsm92.dev/gbkf).
+Python implementation of the [Generic Binary Keyed Format (*.gbkf)](https://gbkf-format.org).
