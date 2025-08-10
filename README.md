@@ -1,7 +1,7 @@
 
 Python implementation of the [Generic Binary Keyed Format (*.gbkf)](https://gbkf-format.org).
 
-Currently, this implementation is not updated since the format is being developed mainly with the C++ implementation.
+This implementation is not yet finished.
 
 ## remarks
 + Currently, the Reader and Writer classes store all content in RAM. In the future, they will be improved to support disk-based I/O operations for large files.
