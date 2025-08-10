@@ -162,7 +162,7 @@ class GBKFCoreReader:
     def __read_int(self, start_pos: int, size: int, signed:bool) -> tuple[int, int]:
         end_pos = start_pos + size
         bytes_value = self.__bytes_data[start_pos:end_pos]
-        return int.from_bytes(bytes_value, byteorder='big', signed=signed), end_pos
+        return int.from_bytes(bytes_value, byteorder='little', signed=signed), end_pos
 
     def __read_ascii(self, start_pos: int, length: int) -> tuple[str, int]:
         end_pos = start_pos + length

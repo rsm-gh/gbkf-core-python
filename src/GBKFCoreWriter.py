@@ -310,7 +310,7 @@ class GBKFCoreWriter:
             raise ValueError(f"Integer out of maximum bonds.")
 
 
-        return value.to_bytes(size, byteorder='big', signed=signed)
+        return value.to_bytes(size, byteorder='little', signed=signed)
 
     @staticmethod
     def __format_single(value: float):
@@ -341,7 +341,7 @@ class GBKFCoreWriter:
                       start_pos: int,
                       length: int):
         verify_int(value, min_value=min_value, max_value=max_value)
-        binary_value = value.to_bytes(length, byteorder='big', signed=False)
+        binary_value = value.to_bytes(length, byteorder='little', signed=False)
         self.__byte_buffer[start_pos:start_pos + length] = binary_value
 
     def __get_keyed_values_header(self,
