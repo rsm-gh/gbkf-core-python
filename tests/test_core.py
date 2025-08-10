@@ -14,14 +14,17 @@
 # See the LICENSE file for more details.
 
 import os
-import sys
 import shutil
-import unittest
+import sys
 import tempfile
+import unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src"))
 
-from GBKFCore import Constants, Reader, Writer
+import GBKFCore
+from GBKFCoreReader import GBKFCoreReader
+from GBKFCoreWriter import GBKFCoreWriter
+
 
 class TestGBKFCore(unittest.TestCase):
 
@@ -36,141 +39,175 @@ class TestGBKFCore(unittest.TestCase):
     def test_header(self):
 
         test_data = (
-            #gbkf_version           specification_id       specification_version    keys_length            keyed_values_nb
-            (0,                     0,                     0,                       1,                     1                    ), # Min
-            (Constants._uint_8_max, Constants._uint_32_max, Constants._uint_16_max, Constants._uint_8_max, Constants._uint_32_max), # Max
-            (10,                    11,                    12,                      13,                    13                   ), # Value
+            # gbkf_version   specification_id       specification_version    keys_size            keyed_values_nb
+            (0, 0, 0, 1, 1),  # Min
+            (GBKFCore.ValueTypeBoundaries._uint_8_max, GBKFCore.ValueTypeBoundaries._uint_32_max, GBKFCore.ValueTypeBoundaries._uint_16_max,
+             GBKFCore.ValueTypeBoundaries._uint_8_max, GBKFCore.ValueTypeBoundaries._uint_32_max),  # Max
+            (10, 11, 12, 13, 13),  # Value
         )
 
-        for test_index, (gbkf_version, specification_id, specification_version, keys_length, keyed_values_nb) in enumerate(test_data):
-
+        for test_index, (gbkf_version,
+                         specification_id,
+                         specification_version,
+                         keys_size,
+                         keyed_values_nb) in enumerate(test_data):
             test_path = os.path.join(self._work_dir, f"test_core_header_{test_index}.gbkf")
 
             #
             # Write the data
             #
-            gbkf_writer = Writer()
+            gbkf_writer = GBKFCoreWriter()
             gbkf_writer.set_gbkf_version(gbkf_version)
             gbkf_writer.set_specification_id(specification_id)
             gbkf_writer.set_specification_version(specification_version)
-            gbkf_writer.set_keys_length(keys_length)
+            gbkf_writer.set_keys_size(keys_size)
             gbkf_writer.set_keyed_values_nb(keyed_values_nb)
 
-            gbkf_writer.write(test_path, auto=False)
+            gbkf_writer.write(test_path, auto_update=False, add_footer= test_index>1)
 
             #
             # Read the data & test
             #
-            gbkf_reader = Reader(test_path)
+            gbkf_reader = GBKFCoreReader(test_path)
             self.assertEqual(gbkf_reader.get_gbkf_version(), gbkf_version)
             self.assertEqual(gbkf_reader.get_specification_id(), specification_id)
             self.assertEqual(gbkf_reader.get_specification_version(), specification_version)
-            self.assertEqual(gbkf_reader.get_keys_length(), keys_length)
+            self.assertEqual(gbkf_reader.get_keys_size(), keys_size)
             self.assertEqual(gbkf_reader.get_keyed_values_nb(), keyed_values_nb)
-            self.assertTrue(gbkf_reader.verifies_sha())
-
+            self.assertEqual(gbkf_reader.verifies_sha(), test_index>1)
 
     def test_values(self):
 
         test_path = os.path.join(self._work_dir, "test_core_values.gbkf")
 
-        integer_pos_key = "IP"
+        input_values_uint8 = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 255]
+        input_values_uint16 = [1, 200, 300, 400, 45, 600, 700, 800, 900, 1000]
+        input_values_uint32 = [100, 200, 1, 400, 500, 600, 700, 454545, 900, 1000]
+        input_values_uint64 = [100, 454545, 300, 400, 500, 600, 1, 800, 900, 1000]
 
-        integer_pos1_instance_id = 1
-        integer_pos1_values = (1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+        input_values_int8 = [-1, 2, 3, 4, -5, 6, 7, 8, 9, 10, 100]
+        input_values_int16 = [1, 200, -300, 400, 45, -600, 700, 800, 900, 1000]
+        input_values_int32 = [100, 200, 1, 400, 500, -600, 700, 454545, -900, 1000]
+        input_values_int64 = [100, -454545, 300, 400, 500, 600, 1, 800, -900, 1000]
 
-        integer_pos2_instance_id = 2
-        integer_pos2_values = (100, 200, 300, 400, 500, 600, 700, 800, 900, 1000)
-
-        single_key = "SS"
-        single_1_instance_id = 1
-        single_1_values = (0, .6575, 1.5, 100.9, -10.864)
-
-        double_key = "DD"
-        double_1_instance_id = 1
-        double_1_values = (0, .3434546785, 1.5, 1000.9, -10000.865)
+        #input_booleans = [True, True, True, True, False, False, False, False, True, False]
+        input_floats32 = [0, .3467846785, 6.5, 110.9, -15000.865]
+        input_floats64 = [0, .3434546785, 1.5, 1000.9, -10000.865]
+        #input_blobs = [0b11001100, 0b10101010, 0b11110000]
 
         #
         # Write the data
         #
-        gbkf_writer = Writer()
-        gbkf_writer.set_keys_length(2)
+        gbkf_writer = GBKFCoreWriter()
+        gbkf_writer.set_keys_size(2)
 
-        gbkf_writer.add_line_integers(key=integer_pos_key,
-                                      instance_id=integer_pos1_instance_id,
-                                      integers=integer_pos1_values)
+        gbkf_writer.add_keyed_values_uint8(key="UI",
+                                           instance_id=1,
+                                           integers=input_values_uint8)
 
-        gbkf_writer.add_line_integers(key=integer_pos_key,
-                                      instance_id=integer_pos2_instance_id,
-                                      integers=integer_pos2_values)
+        gbkf_writer.add_keyed_values_uint16(key="UI",
+                                            instance_id=2,
+                                            integers=input_values_uint16)
 
-        gbkf_writer.add_line_single(key=single_key,
-                                    instance_id=single_1_instance_id,
-                                    singles=single_1_values)
+        gbkf_writer.add_keyed_values_uint32(key="UI",
+                                            instance_id=3,
+                                            integers=input_values_uint32)
 
-        gbkf_writer.add_line_double(key=double_key,
-                                    instance_id=double_1_instance_id,
-                                    doubles=double_1_values)
+        gbkf_writer.add_keyed_values_uint64(key="UI",
+                                            instance_id=4,
+                                            integers=input_values_uint64)
 
-        gbkf_writer.write(test_path, auto=True)
+        gbkf_writer.add_keyed_values_int8(key="SI",
+                                           instance_id=1,
+                                           integers=input_values_int8)
+
+        gbkf_writer.add_keyed_values_int16(key="SI",
+                                            instance_id=2,
+                                            integers=input_values_int16)
+
+        gbkf_writer.add_keyed_values_int32(key="SI",
+                                            instance_id=3,
+                                            integers=input_values_int32)
+
+        gbkf_writer.add_keyed_values_int64(key="SI",
+                                            instance_id=4,
+                                            integers=input_values_int64)
+
+
+        gbkf_writer.add_keyed_values_float32(key="F3",
+                                             instance_id=5,
+                                             singles=input_floats32)
+
+        gbkf_writer.add_keyed_values_float64(key="F6",
+                                             instance_id=1,
+                                             doubles=input_floats64)
+
+        gbkf_writer.write(test_path, auto_update=True)
 
         #
         # Read the data
         #
 
-        gbkf_reader = Reader(test_path)
+        gbkf_reader = GBKFCoreReader(test_path)
         keyed_values = gbkf_reader.get_keyed_values()
 
-        read_integer_pos1 = keyed_values[integer_pos_key][0]
+        output_entry_uint8 = keyed_values["UI"][0]
+        self.assertEqual(output_entry_uint8.get_type(), GBKFCore.ValueType.UINT8)
+        self.assertEqual(output_entry_uint8.instance_id, 1)
+        self.assertEqual(output_entry_uint8.get_values(), input_values_uint8)
 
-        self.assertEqual(read_integer_pos1, (integer_pos1_instance_id,
-                                                    len(integer_pos1_values),
-                                                    Constants.KeyedValues.Types._integer,
-                                                    integer_pos1_values))
+        output_entry_uint16 = keyed_values["UI"][1]
+        self.assertEqual(output_entry_uint16.get_type(), GBKFCore.ValueType.UINT16)
+        self.assertEqual(output_entry_uint16.instance_id, 2)
+        self.assertEqual(output_entry_uint16.get_values(), input_values_uint16)
+
+        output_entry_uint32 = keyed_values["UI"][2]
+        self.assertEqual(output_entry_uint32.get_type(), GBKFCore.ValueType.UINT32)
+        self.assertEqual(output_entry_uint32.instance_id, 3)
+        self.assertEqual(output_entry_uint32.get_values(), input_values_uint32)
+
+        output_entry_uint64 = keyed_values["UI"][3]
+        self.assertEqual(output_entry_uint64.get_type(), GBKFCore.ValueType.UINT64)
+        self.assertEqual(output_entry_uint64.instance_id, 4)
+        self.assertEqual(output_entry_uint64.get_values(), input_values_uint64)
+
+        output_entry_int8 = keyed_values["SI"][0]
+        self.assertEqual(output_entry_int8.get_type(), GBKFCore.ValueType.INT8)
+        self.assertEqual(output_entry_int8.instance_id, 1)
+        self.assertEqual(output_entry_int8.get_values(), input_values_int8)
+
+        output_entry_int16 = keyed_values["SI"][1]
+        self.assertEqual(output_entry_int16.get_type(), GBKFCore.ValueType.INT16)
+        self.assertEqual(output_entry_int16.instance_id, 2)
+        self.assertEqual(output_entry_int16.get_values(), input_values_int16)
+
+        output_entry_int32 = keyed_values["SI"][2]
+        self.assertEqual(output_entry_int32.get_type(), GBKFCore.ValueType.INT32)
+        self.assertEqual(output_entry_int32.instance_id, 3)
+        self.assertEqual(output_entry_int32.get_values(), input_values_int32)
+
+        output_entry_int64 = keyed_values["SI"][3]
+        self.assertEqual(output_entry_int64.get_type(), GBKFCore.ValueType.INT64)
+        self.assertEqual(output_entry_int64.instance_id, 4)
+        self.assertEqual(output_entry_int64.get_values(), input_values_int64)
 
 
-        read_integer_pos2 = keyed_values[integer_pos_key][1]
-        self.assertEqual(read_integer_pos2, (integer_pos2_instance_id,
-                                                    len(integer_pos2_values),
-                                                    Constants.KeyedValues.Types._integer,
-                                                    integer_pos2_values))
+        output_entry_float32 = keyed_values["F3"][0]
+        self.assertEqual(output_entry_float32.get_type(), GBKFCore.ValueType.FLOAT32)
+        self.assertEqual(output_entry_float32.instance_id, 5)
+        output_entry_float32_values = output_entry_float32.get_values()
+        for i, input_value in enumerate(input_floats32):
+            self.assertAlmostEqual(output_entry_float32_values[i], input_value, delta=1e-3)
 
-        read_singles = keyed_values[single_key][0]
-        self.compare_item_values((single_1_instance_id,
-                                      len(single_1_values),
-                                      Constants.KeyedValues.Types._single,
-                                      single_1_values),
-                           read_singles)
-
-        read_doubles = keyed_values[double_key][0]
-        self.compare_item_values((double_1_instance_id,
-                                                len(double_1_values),
-                                                Constants.KeyedValues.Types._double,
-                                                double_1_values),
-                           read_doubles)
+        output_entry_float64 = keyed_values["F6"][0]
+        self.assertEqual(output_entry_float64.get_type(), GBKFCore.ValueType.FLOAT64)
+        self.assertEqual(output_entry_float64.instance_id, 1)
+        output_entry_float64_values = output_entry_float64.get_values()
+        for i, input_value in enumerate(input_floats64):
+            self.assertAlmostEqual(output_entry_float64_values[i], input_value, delta=1e-3)
 
         self.assertTrue(gbkf_reader.verifies_sha())
 
 
-    def compare_item_values(self, base_items, compare_items, accepted_error=1e-4):
-        """
-            Compare a list of numbers, and the list can contain sub-lists of floats.
-            [1, 3, 5, [3.44, 234.56]]
-        """
-
-        for item_index, base_item in enumerate(base_items):
-            compare_item = compare_items[item_index]
-
-            if isinstance(compare_item, int):
-                self.assertEqual(base_item, compare_item)
-
-            else:
-
-                for value_index, base_value in enumerate(base_item):
-                    compare_value = compare_item[value_index]
-                    self.assertAlmostEqual(base_value, compare_value, delta=accepted_error)
-
-
 if __name__ == '__main__':
     unittest.main()
-
