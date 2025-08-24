@@ -93,13 +93,13 @@ class GBKFCoreReader:
 
             key, current_pos = self.__read_ascii(current_pos, self.__keys_size)
             instance_id, current_pos = self.__read_int(current_pos, size=4, signed=False)
+            values_type, current_pos = self.__read_int(current_pos, size=1, signed=False)
             values_number, current_pos = self.__read_int(current_pos, size=4, signed=False)
-            value_type, current_pos = self.__read_int(current_pos, size=1, signed=False)
 
-            keyed_entry = GBKFCore.KeyedEntry(GBKFCore.ValueType(value_type))
+            keyed_entry = GBKFCore.KeyedEntry(GBKFCore.ValueType(values_type))
             keyed_entry.instance_id = instance_id
 
-            match value_type:
+            match values_type:
 
                 case GBKFCore.ValueType.INT8:
                     values, current_pos = self.__read_values_int(current_pos, values_number, 1, signed=True)

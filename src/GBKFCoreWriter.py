@@ -342,8 +342,8 @@ class GBKFCoreWriter:
         line_bytes = bytearray()
         line_bytes += self.__format_key(key)
         line_bytes += self.__format_integer(instance_id, size=4, signed=False)
-        line_bytes += self.__format_integer(values_nb, size=4, signed=False)
         line_bytes += self.__format_integer(values_type, size=1, signed=False)
+        line_bytes += self.__format_integer(values_nb, size=4, signed=False)
 
         return line_bytes
 
