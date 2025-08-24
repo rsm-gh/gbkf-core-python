@@ -86,8 +86,6 @@ class GBKFCoreWriter:
         self.set_gbkf_version()
         self.set_specification_id()
         self.set_specification_version()
-        self.set_main_string_encoding()
-        self.set_secondary_string_encoding()
         self.set_keys_size()
         self.set_keyed_values_nb()
 
@@ -107,20 +105,6 @@ class GBKFCoreWriter:
 
     def set_specification_version(self, uint16: int = 0):
         self.__set_integer(uint16,
-                           min_value=0,
-                           max_value=GBKFCore.ValueTypeBoundaries._uint_16_max,
-                           start_pos=GBKFCore.Header.SPECIFICATION_VERSION_START,
-                           length=GBKFCore.Header.SPECIFICATION_VERSION_SIZE)
-
-    def set_main_string_encoding(self, uint16: GBKFCore.EncodingType = GBKFCore.EncodingType.UTF8):
-        self.__set_integer(uint16,
-                           min_value=0,
-                           max_value=GBKFCore.ValueTypeBoundaries._uint_16_max,
-                           start_pos=GBKFCore.Header.SECONDARY_STRING_ENCODING_START,
-                           length=GBKFCore.Header.SECONDARY_STRING_ENCODING_SIZE)
-
-    def set_secondary_string_encoding(self, uint8: GBKFCore.EncodingType = GBKFCore.EncodingType.UTF8):
-        self.__set_integer(uint8,
                            min_value=0,
                            max_value=GBKFCore.ValueTypeBoundaries._uint_16_max,
                            start_pos=GBKFCore.Header.SPECIFICATION_VERSION_START,

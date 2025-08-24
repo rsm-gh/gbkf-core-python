@@ -14,8 +14,8 @@
 # See the LICENSE file for more details.
 
 import os
-import shutil
 import sys
+import shutil
 import tempfile
 import unittest
 

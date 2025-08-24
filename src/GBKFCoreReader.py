@@ -29,8 +29,6 @@ class GBKFCoreReader:
         self.__specification_version = None
         self.__keys_size = None
         self.__keyed_values_nb = None
-        self.__main_string_encoding = None
-        self.__secondary_string_encoding = None
 
         with open(read_path, "rb") as file:
             self.__bytes_data = file.read()
@@ -60,14 +58,6 @@ class GBKFCoreReader:
                                                           size=GBKFCore.Header.SPECIFICATION_VERSION_SIZE,
                                                           signed=False)
 
-        self.__main_string_encoding, _ = self.__read_int(GBKFCore.Header.MAIN_STRING_ENCODING_START,
-                                                         size=GBKFCore.Header.MAIN_STRING_ENCODING_SIZE,
-                                                         signed=False)
-
-        self.__secondary_string_encoding, _ = self.__read_int(GBKFCore.Header.SECONDARY_STRING_ENCODING_START,
-                                                              size=GBKFCore.Header.SECONDARY_STRING_ENCODING_SIZE,
-                                                              signed=False)
-
         self.__keys_size, _ = self.__read_int(GBKFCore.Header.KEYS_SIZE_START,
                                               size=GBKFCore.Header.KEYS_SIZE_SIZE,
                                               signed=False)
@@ -87,12 +77,6 @@ class GBKFCoreReader:
 
     def get_specification_version(self) -> None | int:
         return self.__specification_version
-
-    def get_main_string_encoding(self) -> None | int:
-        return self.__main_string_encoding
-
-    def get_secondary_string_encoding(self) -> None | int:
-        return self.__secondary_string_encoding
 
     def get_keys_size(self) -> None | int:
         return self.__keys_size
